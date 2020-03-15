@@ -1,8 +1,9 @@
-
+require('dotenv').config()
 
 const express = require('express')
 const app = express()
 
+// Middleware for Logging
 const morgan = require('morgan')
 app.use(morgan('tiny'))
 
@@ -13,58 +14,58 @@ const bodyParser = require('body-parser')
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
-const { pool } = require('./config')
+// Pool is used to make queries (see: node-postgres docs)
+const { Pool } = require('pg')
+const isProduction = process.env.NODE_ENV === 'production'
 
+const connectionString = `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_DATABASE}`
 
+const pool = new Pool({
+    connectionString: isProduction ? process.env.DATABASE_URL : connectionString,
+    ssl: isProduction,
+})
 
-
-app.get('/', async (req, res, next) => {
+app.get('/', (req, res, next) => {
     try {
-
+        pool.query('SELECT current_database();', (error, results) => {
+            if (error) {
+                throw error
+            }
+            res.status(200).json(results.rows)
+        })
     }
-    catch (exception) {
-        next(exception)
+    catch (error) {
+        next(error)
     }
 })
 
-const getBooks = (request, response) => {
-    pool.query('SELECT * FROM books', (error, results) => {
-      if (error) {
-        throw error
-      }
-      response.status(200).json(results.rows)
-    })
-  }
-  
-  const addBook = (request, response) => {
-    const { author, title } = request.body
-  
-    pool.query('INSERT INTO books (author, title) VALUES ($1, $2)', [author, title], error => {
-      if (error) {
-        throw error
-      }
-      response.status(201).json({ status: 'success', message: 'Book added.' })
-    })
-  }
-  
-  app
-    .route('/books')
-    // GET endpoint
-    .get(getBooks)
-    // POST endpoint
-    .post(addBook)
-  
-  // Start server
-  app.listen(process.env.PORT || 3002, () => {
+// app.post('/', (req, res, next) => {
+//     try {
+//         const { author, title } = req.body
+
+//         pool.query(';', [author, title], error => {
+//             if (error) {
+//                 throw error
+//             }
+//             res.status(201).json({ status: 'success', message: 'Done!' })
+//         })
+//     }
+//     catch (error) {
+//         next(error)
+//     }
+// })
+
+// Middleware for Unknown Endpoints
+const unknownEndpoint = (req, res) => {
+    response.status(404).send({ error: 'unknown endpoint' })
+}
+app.use(unknownEndpoint)
+
+// Start server
+const PORT = process.env.PORT || 3002
+app.listen(PORT, () => {
     console.log(`Server listening`)
-  })
+})
 
-// const unknownEndpoint = (req, res) => {
-//     response.status(404).send({ error: 'unknown endpoint' })
-// }
-
-// app.use(unknownEndpoint)
-
-// const PORT = process.env.PORT
-// app.listen(PORT, () => { console.log(`Server running on ${PORT}`) })
-
+//heroku test
+// heroku local web
