@@ -18,6 +18,7 @@ app.use(bodyParser.urlencoded({ extended: true }))
 const { Pool } = require('pg')
 const isProduction = process.env.NODE_ENV === 'production'
 
+// For Local Use
 const connectionString = `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_DATABASE}`
 
 const pool = new Pool({
@@ -25,22 +26,19 @@ const pool = new Pool({
     ssl: isProduction,
 })
 
+// GET Route for all request
 app.get('/', (req, res, next) => {
-    try {
-        pool.query('SELECT current_database();', (error, results) => {
-            if (error) {
-                throw error
-            }
-            res.status(200).json(results.rows)
-        })
-    }
-    catch (error) {
-        next(error)
-    }
+    pool.query('SELECT current_database();', (error, results) => {
+        if (error) {
+            throw error
+        }
+        res.status(200).json(results.rows)
+    })
 })
 
+// For multiple parameters: http://expressjs.com/en/guide/routing.html#route-parameters
+
 // app.post('/', (req, res, next) => {
-//     try {
 //         const { author, title } = req.body
 
 //         pool.query(';', [author, title], error => {
@@ -49,10 +47,6 @@ app.get('/', (req, res, next) => {
 //             }
 //             res.status(201).json({ status: 'success', message: 'Done!' })
 //         })
-//     }
-//     catch (error) {
-//         next(error)
-//     }
 // })
 
 // Middleware for Unknown Endpoints
@@ -62,10 +56,7 @@ const unknownEndpoint = (req, res) => {
 app.use(unknownEndpoint)
 
 // Start server
-const PORT = process.env.PORT || 3002
+const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
     console.log(`Server listening`)
 })
-
-//heroku test
-// heroku local web
