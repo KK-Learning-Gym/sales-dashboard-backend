@@ -90,6 +90,7 @@ app.get('/db/:year/:month', [
 
         // Executed only if results are returned from the SQL Query
         if (results.rowCount !== 0) {
+            // Processing is done Server Side
             // This is sent back
             const resultObject = {
                 "Revenues": {
@@ -123,9 +124,9 @@ app.get('/db/:year/:month', [
         // Removing the else keyword will lead to the following error
         // Error [ERR_HTTP_HEADERS_SENT]: Cannot set headers after they are sent to the client
         else {
-            res.status(404).json({ error: 'no results returned from query' })
+            res.status(404).json({ error: 'no results returned' })
         }
-        
+
     })
 })
 
@@ -162,7 +163,7 @@ app.use(unknownEndpoint)
 // Start server
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
-    console.log(`Server listening`)
+    console.log('Server listening')
 })
 
 

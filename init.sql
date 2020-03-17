@@ -1,4 +1,7 @@
 -- This file creates the listed tables and entries on Heroku Postgres
+-- Don't run this file, instead
+-- Connect to the Heroku DB, run the CREATE TABLE query below
+-- Run the below \copy query locally while connected and the Heroku DB will be populated
 -- cat init.sql | heroku pg:psql postgresql-whatever-00000 --app example-node-api
 
 CREATE TABLE sales(
@@ -18,6 +21,13 @@ orders_c int CHECK(orders_c>=0),
 orders_ne int CHECK(orders_ne>=0),
 orders_se int CHECK(orders_se>=0)
 );
+
 -- https://www.postgresqltutorial.com/import-csv-file-into-posgresql-table/
-COPY month,source,product_views,added_to_cart,orders,revenue,checkout_rate,purchase_rate,abandoned_rate,orders_nw,orders_sw,orders_c,orders_ne,orders_se)
-FROM './Sales_Data.csv' DELIMITER ',' CSV HEADER;
+
+--Local
+COPY sales(month,source,product_views,added_to_cart,orders,revenue,checkout_rate,purchase_rate,abandoned_rate,orders_nw,orders_sw,orders_c,orders_ne,orders_se)
+FROM '/Users/kunalkundu/Desktop/temp.nosync/sales-dashboard-backend/Sales_Data.csv' DELIMITER ',' CSV HEADER;
+
+--Heroku/Local (Run without superuser)
+\copy sales(month,source,product_views,added_to_cart,orders,revenue,checkout_rate,purchase_rate,abandoned_rate,orders_nw,orders_sw,orders_c,orders_ne,orders_se)
+FROM '/Users/kunalkundu/Desktop/temp.nosync/sales-dashboard-backend/Sales_Data.csv' DELIMITER ',' CSV HEADER;
