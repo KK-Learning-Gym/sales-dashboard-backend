@@ -36,18 +36,70 @@ app.get('/', (req, res, next) => {
     })
 })
 
-// For multiple parameters: http://expressjs.com/en/guide/routing.html#route-parameters
 
-// app.post('/', (req, res, next) => {
-//         const { author, title } = req.body
+//Example Query: SELECT * FROM sales WHERE sales.month='Jan 2018';
+app.get('/:year/:month', (req, res, next) => {
+    const query = "SELECT * FROM sales WHERE sales.month='" + req.params.month + " " + req.params.year + "';"
+    pool.query(query, (error, results) => {
+        if (error) {
+            throw error
+        }
+        function revenueOf(source) {
+            return results.rows
+                .filter(object => object.source === source)
+                .map(filteredObject => filteredObject.revenue)[0]
+        }
+        function ordersFrom(source) {
+            return results.rows
+                .filter(object => object.source === source)
+                .map(filteredObject => filteredObject.orders)[0]
+        }
+        function totalRevenue() {
+            return results.rows
+                .map(object => object.revenue)
+                .reduce((accumulator, currentValue) => accumulator + currentValue)
+        }
 
-//         pool.query(';', [author, title], error => {
-//             if (error) {
-//                 throw error
-//             }
-//             res.status(201).json({ status: 'success', message: 'Done!' })
-//         })
-// })
+        const resultObject = {
+            "Revenues": {
+                "AM": revenueOf("AM"),
+                "EB": revenueOf("EB"),
+                "ET": revenueOf("ET"),
+                "total": totalRevenue(),
+            },
+            "Rates": {
+                "purchase": Math.floor(results.rows.map(object => object.purchase_rate).reduce((accumulator, currentValue) => accumulator + currentValue) / 3),
+                "checkout": Math.floor(results.rows.map(object => object.checkout_rate).reduce((accumulator, currentValue) => accumulator + currentValue) / 3),
+                "abandoned": Math.floor(results.rows.map(object => object.abandoned_rate).reduce((accumulator, currentValue) => accumulator + currentValue) / 3),
+            },
+            "OrdersByStore": {
+                "AM": ordersFrom("AM"),
+                "EB": ordersFrom("EB"),
+                "ET": ordersFrom("ET"),
+            },
+            "OrdersByRegion": {
+                "nw": results.rows.map(object => object.orders_nw).reduce((accumulator, currentValue) => accumulator + currentValue),
+                "sw": results.rows.map(object => object.orders_sw).reduce((accumulator, currentValue) => accumulator + currentValue),
+                "c": results.rows.map(object => object.orders_c).reduce((accumulator, currentValue) => accumulator + currentValue),
+                "ne": results.rows.map(object => object.orders_ne).reduce((accumulator, currentValue) => accumulator + currentValue),
+                "se": results.rows.map(object => object.orders_se).reduce((accumulator, currentValue) => accumulator + currentValue),
+            },
+        }
+        console.log(resultObject)
+        res.status(200).json(results.rows)
+    })
+})
+
+app.get('/:year', (req, res, next) => {
+    const query = "SELECT * FROM sales WHERE sales.month LIKE '%" + req.params.year + "';"
+    console.log(query)
+    pool.query(query, (error, results) => {
+        if (error) {
+            throw error
+        }
+        res.status(200).json(results.rows)
+    })
+})
 
 // Middleware for Unknown Endpoints
 const unknownEndpoint = (req, res) => {
