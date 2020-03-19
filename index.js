@@ -28,9 +28,14 @@ const pool = new Pool({
 })
 console.log("Connected to Database!")
 
+// Serves the build folder from frontend
+app.use(express.static('build'))
+
 const { check, validationResult } = require('express-validator')
 
 // GET Route for all request, Does nothing
+// Update: Serves the Frontend
+// The below code is not needed to serve the frontend
 app.get('/', (req, res, next) => {
     pool.query('SELECT current_database();', (error, results) => {
         if (error) {
@@ -54,7 +59,7 @@ app.get('/db/:year/:month', [
     // checks if the year is 2018 or 2019 (data is only available for this)
     check('year').isLength({ min: 4, max: 4 }).isNumeric().isIn(['2018', '2019']),
     // checks if the month is a string from the given list
-    check('month').isLength({ min: 3, max: 3 }).isAlpha().isIn(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'July', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
+    check('month').isLength({ min: 3, max: 3 }).isAlpha().isIn(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
 ], (req, res, next) => {
 
     // Finds the validation errors in request and wraps them in an object
@@ -112,7 +117,7 @@ app.get('/db/:year/:month', [
                 "OrdersByRegion": {
                     "nw": results.rows.map(object => object.orders_nw).reduce((accumulator, currentValue) => accumulator + currentValue),
                     "sw": results.rows.map(object => object.orders_sw).reduce((accumulator, currentValue) => accumulator + currentValue),
-                    "c": results.rows.map(object => object.orders_c).reduce((accumulator, currentValue) => accumulator + currentValue),
+                    "cr": results.rows.map(object => object.orders_c).reduce((accumulator, currentValue) => accumulator + currentValue),
                     "ne": results.rows.map(object => object.orders_ne).reduce((accumulator, currentValue) => accumulator + currentValue),
                     "se": results.rows.map(object => object.orders_se).reduce((accumulator, currentValue) => accumulator + currentValue),
                 },
